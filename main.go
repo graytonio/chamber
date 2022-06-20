@@ -21,6 +21,6 @@ func main() {
 	}
 
 	for _, template := range config.Templates {
-		fmt.Println(template)
+		fmt.Printf("%s/%s\n", template.Repo.Url, template.Template)
 	}
 }

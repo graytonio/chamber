@@ -21,8 +21,8 @@ type RepoInfo struct {
 }
 
 type Template struct {
-	template string
-	repo     *RepoInfo
+	Template string
+	Repo     *RepoInfo
 }
 
 type Config struct {
@@ -78,7 +78,7 @@ func read_repo_templates(f fs.FS, repo *RepoInfo) ([]Template, *chambererrors.Ch
 
 	var templates []Template
 	for _, template := range manifest_file.Templates {
-		templates = append(templates, Template{template: template, repo: repo})
+		templates = append(templates, Template{Template: template, Repo: repo})
 	}
 
 	return templates, nil
