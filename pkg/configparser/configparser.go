@@ -37,7 +37,9 @@ type manifest_struct struct {
 	Templates []string `json:"templates"`
 }
 
+// Finds and parses the config file to return an array of available templates
 func ReadConfigFile(f fs.FS, path string) (*Config, *chambererrors.ChamberError) {
+	// TODO Look for cache file first
 	content, err := fs.ReadFile(f, path)
 	if err != nil {
 		fmt.Println(err)
@@ -49,12 +51,12 @@ func ReadConfigFile(f fs.FS, path string) (*Config, *chambererrors.ChamberError)
 
 	var config Config
 	for _, repo := range config_file.Repos {
-		info, err := parse_repo_url(repo)
+		info, err := ParseRepoUrl(repo)
 		if err != nil {
 			return nil, err
 		}
 
-		templates, err := read_repo_templates(f, info)
+		templates, err := ReadRepoTemplates(f, info)
 		if err != nil {
 			return nil, err
 		}
@@ -62,12 +64,14 @@ func ReadConfigFile(f fs.FS, path string) (*Config, *chambererrors.ChamberError)
 		config.Templates = append(config.Templates, templates...)
 	}
 
+	// TODO cache templates in tmp file
+
 	return &config, nil
 }
 
-func read_repo_templates(f fs.FS, repo *RepoInfo) ([]Template, *chambererrors.ChamberError) {
+func ReadRepoTemplates(f fs.FS, repo *RepoInfo) ([]Template, *chambererrors.ChamberError) {
 	var manifest_url string = fmt.Sprintf("https://raw.githubusercontent.com/%s/%s/%s/manifest.json", repo.User, repo.Name, repo.Branch)
-	content, err := utils.DownloadFile(manifest_url)
+	content, err := utils.DownloadFileContents(manifest_url)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, &chambererrors.DownloadError
@@ -86,7 +90,7 @@ func read_repo_templates(f fs.FS, repo *RepoInfo) ([]Template, *chambererrors.Ch
 
 var supported = []string{"github.com"}
 
-func parse_repo_url(repo string) (*RepoInfo, *chambererrors.ChamberError) {
+func ParseRepoUrl(repo string) (*RepoInfo, *chambererrors.ChamberError) {
 	regex := regexp.MustCompile(`^(?:(?:https:\/\/)?(?P<Domain1>[^:/]+\.[^:/]+)\/|git@(?P<Domain2>[^:/]+)[:/]|(?P<Domain3>[^/]+):)?(?P<User>[^/\s]+)\/(?P<Name>[^/\s#]+)(?:(?P<Subdir>(?:\/[^/\s#]+)+))?(?:\/)?(?:#(?P<Ref>.+))?`)
 	remove_ext := regexp.MustCompile(`\.git$`)
 
